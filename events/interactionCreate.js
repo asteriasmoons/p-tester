@@ -80,14 +80,25 @@ module.exports = {
         const row = new ActionRowBuilder().addComponents(button);
 
         const embed = new EmbedBuilder()
-          .setTitle(panel.embed?.title || 'Need Help?')
-          .setDescription(panel.embed?.description || 'Click the button below to open a ticket.')
-          .setColor(panel.embed?.color || 0x5865F2);
+       .setTitle(panel.embed?.title || 'Need Help?')
+       .setDescription(panel.embed?.description || 'Click the button below to open a ticket.')
+       .setColor(panel.embed?.color || 0x5865F2);
 
-        if (panel.embed?.author?.name) embed.setAuthor(panel.embed.author);
-        if (panel.embed?.footer?.text) embed.setFooter(panel.embed.footer);
-        if (panel.embed?.thumbnail) embed.setThumbnail(panel.embed.thumbnail);
-        if (panel.embed?.image) embed.setImage(panel.embed.image);
+       // FIX: Always map icon_url to iconURL
+      if (panel.embed?.author?.name || panel.embed?.author?.icon_url) {
+        embed.setAuthor({
+      name: panel.embed.author.name || "",
+      iconURL: panel.embed.author.icon_url || undefined
+    });
+  }
+    if (panel.embed?.footer?.text || panel.embed?.footer?.icon_url) {
+      embed.setFooter({
+      text: panel.embed.footer.text || "",
+      iconURL: panel.embed.footer.icon_url || undefined
+    });
+  }
+    if (panel.embed?.thumbnail) embed.setThumbnail(panel.embed.thumbnail);
+    if (panel.embed?.image) embed.setImage(panel.embed.image);
 
         await channel.send({ embeds: [embed], components: [row] });
 

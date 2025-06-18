@@ -14,6 +14,7 @@ const EmbedModel = require('../models/Embed');
 const TicketPanel = require('../models/TicketPanel');
 const TicketInstance = require('../models/TicketInstance');
 const { buildEmbed } = require('../utils/embedEditorUI');
+const { sendGreetingEmbedEditor } = require('../events/ticketPanelUi');
 
 async function generateTranscript(channel) {
   let messages = [];
@@ -223,26 +224,170 @@ module.exports = {
       // === New Ticket Panel Embed Editors ===
 
       // 📝 Edit Greeting Modal
-      if (interaction.customId.startsWith('ticketpanel_edit_greeting:')) {
-        const panelId = interaction.customId.split(':')[1];
-        const panel = await TicketPanel.findById(panelId);
-        if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: false });
+      // if (interaction.customId.startsWith('ticketpanel_edit_greeting:')) {
+       // const panelId = interaction.customId.split(':')[1];
+       // const panel = await TicketPanel.findById(panelId);
+       // if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: false });
 
-        const modal = new ModalBuilder()
-          .setCustomId(`ticketpanel_modal_greeting:${panelId}`)
-          .setTitle('Set Greeting Message')
-          .addComponents(
-            new ActionRowBuilder().addComponents(
-              new TextInputBuilder()
-                .setCustomId('greeting_text')
-                .setLabel('Message shown when ticket is opened')
-                .setStyle(TextInputStyle.Paragraph)
-                .setRequired(true)
-                .setValue(panel.greeting || '')
-            )
-          );
-        return interaction.showModal(modal);
-      }
+      //  const modal = new ModalBuilder()
+        //  .setCustomId(`ticketpanel_modal_greeting:${panelId}`)
+        //  .setTitle('Set Greeting Message')
+         // .addComponents(
+          //  new ActionRowBuilder().addComponents(
+             // new TextInputBuilder()
+               // .setCustomId('greeting_text')
+              //  .setLabel('Message shown when ticket is opened')
+              //  .setStyle(TextInputStyle.Paragraph)
+               // .setRequired(true)
+              //  .setValue(panel.greeting || '')
+           // )
+        //  );
+       // return interaction.showModal(modal);
+      // }
+
+  // --- Greeting Embed Editor UI ---
+  if (interaction.customId.startsWith('ticketpanel_edit_greeting_embed:')) {
+    const panelId = interaction.customId.split(':')[1];
+    const panel = await TicketPanel.findById(panelId);
+    if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: false });
+    return sendGreetingEmbedEditor(interaction, panel);
+  }
+
+  // --- Greeting Embed: Edit Basic Info ---
+  if (interaction.customId.startsWith('greeting_edit_embed_basic:')) {
+    const panelId = interaction.customId.split(':')[1];
+    const panel = await TicketPanel.findById(panelId);
+    if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: false });
+    const ge = panel.greetingEmbed || {};
+    const modal = new ModalBuilder()
+      .setCustomId(`greeting_modal_embed_basic:${panelId}`)
+      .setTitle('Edit Greeting Embed - Basic Info')
+      .addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('title')
+            .setLabel('Title')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false)
+            .setValue(ge.title || ''),
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('description')
+            .setLabel('Description')
+            .setStyle(TextInputStyle.Paragraph)
+            .setRequired(false)
+            .setValue(ge.description || ''),
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('color')
+            .setLabel('Embed Color (Hex)')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false)
+            .setValue(ge.color || '#5103aa')
+        )
+      );
+    return interaction.showModal(modal);
+  }
+
+  // --- Greeting Embed: Edit Author ---
+  if (interaction.customId.startsWith('greeting_edit_embed_author:')) {
+    const panelId = interaction.customId.split(':')[1];
+    const panel = await TicketPanel.findById(panelId);
+    if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: false });
+    const ge = panel.greetingEmbed || {};
+    const modal = new ModalBuilder()
+      .setCustomId(`greeting_modal_embed_author:${panelId}`)
+      .setTitle('Edit Greeting Embed - Author')
+      .addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('author_name')
+            .setLabel('Author Name')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false)
+            .setValue(ge.author?.name || '')
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('author_icon')
+            .setLabel('Author Icon URL')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false)
+            .setValue(ge.author?.icon_url || '')
+        )
+      );
+    return interaction.showModal(modal);
+  }
+
+  // --- Greeting Embed: Edit Footer ---
+  if (interaction.customId.startsWith('greeting_edit_embed_footer:')) {
+    const panelId = interaction.customId.split(':')[1];
+    const panel = await TicketPanel.findById(panelId);
+    if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: false });
+    const ge = panel.greetingEmbed || {};
+    const modal = new ModalBuilder()
+      .setCustomId(`greeting_modal_embed_footer:${panelId}`)
+      .setTitle('Edit Greeting Embed - Footer')
+      .addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('footer_text')
+            .setLabel('Footer Text')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false)
+            .setValue(ge.footer?.text || '')
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('footer_icon')
+            .setLabel('Footer Icon URL')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false)
+            .setValue(ge.footer?.icon_url || '')
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('footer_timestamp')
+            .setLabel('Add Timestamp? (yes/no)')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false)
+            .setValue(ge.footer?.timestamp ? 'yes' : 'no')
+        )
+      );
+    return interaction.showModal(modal);
+  }
+
+  // --- Greeting Embed: Edit Images ---
+  if (interaction.customId.startsWith('greeting_edit_embed_images:')) {
+    const panelId = interaction.customId.split(':')[1];
+    const panel = await TicketPanel.findById(panelId);
+    if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: false });
+    const ge = panel.greetingEmbed || {};
+    const modal = new ModalBuilder()
+      .setCustomId(`greeting_modal_embed_images:${panelId}`)
+      .setTitle('Edit Greeting Embed - Images')
+      .addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('thumbnail')
+            .setLabel('Thumbnail URL')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false)
+            .setValue(ge.thumbnail || '')
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('image')
+            .setLabel('Main Image URL')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false)
+            .setValue(ge.image || '')
+        )
+      );
+    return interaction.showModal(modal);
+  }
 
       // ==== FULL TICKET PANEL EMBED EDIT MODALS ====
 
@@ -507,6 +652,63 @@ if (interaction.isButton() && interaction.customId.startsWith('open_ticket_modal
         });
       }
 
+      // --- Greeting Embed: Save Basic Info ---
+if (interaction.customId.startsWith('greeting_modal_embed_basic:')) {
+  const panelId = interaction.customId.split(':')[1];
+  const panel = await TicketPanel.findById(panelId);
+  if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: false });
+  function emptyToNull(str) { return (typeof str === 'string' && str.trim() === '') ? null : str; }
+  if (!panel.greetingEmbed) panel.greetingEmbed = {};
+  panel.greetingEmbed.title = emptyToNull(interaction.fields.getTextInputValue('title'));
+  panel.greetingEmbed.description = emptyToNull(interaction.fields.getTextInputValue('description'));
+  panel.greetingEmbed.color = emptyToNull(interaction.fields.getTextInputValue('color')) || '#5103aa';
+  await panel.save();
+  return interaction.reply({ content: 'Greeting embed (basic info) updated.' });
+}
+
+// --- Greeting Embed: Save Author ---
+if (interaction.customId.startsWith('greeting_modal_embed_author:')) {
+  const panelId = interaction.customId.split(':')[1];
+  const panel = await TicketPanel.findById(panelId);
+  if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: false });
+  function emptyToNull(str) { return (typeof str === 'string' && str.trim() === '') ? null : str; }
+  if (!panel.greetingEmbed) panel.greetingEmbed = {};
+  if (!panel.greetingEmbed.author) panel.greetingEmbed.author = {};
+  panel.greetingEmbed.author.name = emptyToNull(interaction.fields.getTextInputValue('author_name'));
+  panel.greetingEmbed.author.icon_url = emptyToNull(interaction.fields.getTextInputValue('author_icon'));
+  await panel.save();
+  return interaction.reply({ content: 'Greeting embed (author) updated.' });
+}
+
+// --- Greeting Embed: Save Footer ---
+if (interaction.customId.startsWith('greeting_modal_embed_footer:')) {
+  const panelId = interaction.customId.split(':')[1];
+  const panel = await TicketPanel.findById(panelId);
+  if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: false });
+  function emptyToNull(str) { return (typeof str === 'string' && str.trim() === '') ? null : str; }
+  if (!panel.greetingEmbed) panel.greetingEmbed = {};
+  if (!panel.greetingEmbed.footer) panel.greetingEmbed.footer = {};
+  panel.greetingEmbed.footer.text = emptyToNull(interaction.fields.getTextInputValue('footer_text'));
+  panel.greetingEmbed.footer.icon_url = emptyToNull(interaction.fields.getTextInputValue('footer_icon'));
+  const timestampInput = interaction.fields.getTextInputValue('footer_timestamp').toLowerCase();
+  panel.greetingEmbed.footer.timestamp = timestampInput === 'yes' || timestampInput === 'true';
+  await panel.save();
+  return interaction.reply({ content: 'Greeting embed (footer) updated.' });
+}
+
+// --- Greeting Embed: Save Images ---
+if (interaction.customId.startsWith('greeting_modal_embed_images:')) {
+  const panelId = interaction.customId.split(':')[1];
+  const panel = await TicketPanel.findById(panelId);
+  if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: false });
+  function emptyToNull(str) { return (typeof str === 'string' && str.trim() === '') ? null : str; }
+  if (!panel.greetingEmbed) panel.greetingEmbed = {};
+  panel.greetingEmbed.thumbnail = emptyToNull(interaction.fields.getTextInputValue('thumbnail'));
+  panel.greetingEmbed.image = emptyToNull(interaction.fields.getTextInputValue('image'));
+  await panel.save();
+  return interaction.reply({ content: 'Greeting embed (images) updated.' });
+}
+
             // === TICKET PANEL EMBED MODALS (continued) ===
 
       // Basic
@@ -567,7 +769,7 @@ if (interaction.isButton() && interaction.customId.startsWith('open_ticket_modal
         const panelId = interaction.customId.split(':')[1];
         const panel = await TicketPanel.findById(panelId);
         if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: false });
-        panel.greeting = interaction.fields.getTextInputValue('greeting_text');
+        panel.greetingEmbed = interaction.fields.getTextInputValue('greeting_text');
         await panel.save();
         return interaction.reply({ content: 'Greeting message updated.' });
       }
@@ -587,73 +789,128 @@ if (interaction.isButton() && interaction.customId.startsWith('open_ticket_modal
     }
 
     // === TICKET: Modal Submit (Create Ticket Channel) ===
-    if (interaction.isModalSubmit() && interaction.customId.startsWith('ticket_modal_submit:')) {
+if (interaction.isModalSubmit() && interaction.customId.startsWith('ticket_modal_submit:')) {
+  try {
     const panelName = interaction.customId.split(':')[1];
     const panel = await TicketPanel.findOne({
-    guildId: interaction.guild.id,
-    panelName
-  });
-  if (!panel) {
-    return interaction.reply({
-      content: `Ticket panel \`${panelName}\` not found.`,
-      ephemeral: false
+      guildId: interaction.guild.id,
+      panelName
     });
-  }
-  const issue = interaction.fields.getTextInputValue('issue');
-
-  const overwrites = [
-    {
-      id: interaction.guild.roles.everyone,
-      deny: ['ViewChannel']
-    },
-    {
-      id: interaction.user.id,
-      allow: ['ViewChannel', 'SendMessages']
+    if (!panel) {
+      return interaction.reply({
+        content: `Ticket panel \`${panelName}\` not found.`,
+        ephemeral: false
+      });
     }
-  ];
+    const issue = interaction.fields.getTextInputValue('issue');
 
-  // If you want to add a specific mod role, add it here, e.g.:
-  // overwrites.push({ id: 'MOD_ROLE_ID', allow: ['ViewChannel', 'SendMessages'] });
+    const overwrites = [
+      {
+        id: interaction.guild.roles.everyone,
+        deny: ['ViewChannel']
+      },
+      {
+        id: interaction.user.id,
+        allow: ['ViewChannel', 'SendMessages']
+      }
+    ];
 
-  const channelOptions = {
-    name: `ticket-${interaction.user.username}`.toLowerCase(),
-    type: ChannelType.GuildText,
-    permissionOverwrites: overwrites
-  };
-  if (panel.ticketCategoryId) {
-    channelOptions.parent = panel.ticketCategoryId;
-  }
-  const ticketChannel = await interaction.guild.channels.create(channelOptions);
+    const channelOptions = {
+      name: `ticket-${interaction.user.username}`.toLowerCase(),
+      type: ChannelType.GuildText,
+      permissionOverwrites: overwrites
+    };
+    if (panel.ticketCategoryId) {
+      channelOptions.parent = panel.ticketCategoryId;
+    }
+    const ticketChannel = await interaction.guild.channels.create(channelOptions);
 
-  await TicketInstance.create({
-    ticketId: ticketChannel.id,
-    userId: interaction.user.id,
-    panelName,
-    channelId: ticketChannel.id,
-    status: 'open',
-    content: { issue }
-  });
+    await TicketInstance.create({
+      ticketId: ticketChannel.id,
+      userId: interaction.user.id,
+      panelName,
+      channelId: ticketChannel.id,
+      status: 'open',
+      content: { issue }
+    });
 
-  const claimBtn = new ButtonBuilder().setCustomId('ticket_claim').setLabel('Claim').setStyle(ButtonStyle.Secondary);
-  const closeBtn = new ButtonBuilder().setCustomId('ticket_close').setLabel('Close').setStyle(ButtonStyle.Secondary);
-  const deleteBtn = new ButtonBuilder().setCustomId('ticket_delete').setLabel('Delete').setStyle(ButtonStyle.Secondary);
-  const row = new ActionRowBuilder().addComponents(claimBtn, closeBtn, deleteBtn);
+    // --- BUILD THE GREETING EMBED ---
+    let greetingEmbed;
+    if (panel.greetingEmbed && typeof panel.greetingEmbed === "object") {
+      greetingEmbed = new EmbedBuilder();
 
-  await ticketChannel.send({
-    content: `<@${interaction.user.id}>`,
-    embeds: [
-      new EmbedBuilder()
+      // Basic fields
+      if (panel.greetingEmbed.title) greetingEmbed.setTitle(panel.greetingEmbed.title);
+      if (panel.greetingEmbed.description) greetingEmbed.setDescription(panel.greetingEmbed.description);
+      if (panel.greetingEmbed.color) greetingEmbed.setColor(panel.greetingEmbed.color);
+
+      // Author
+      if (panel.greetingEmbed.author && (panel.greetingEmbed.author.name || panel.greetingEmbed.author.icon_url)) {
+        greetingEmbed.setAuthor({
+          name: panel.greetingEmbed.author.name || "",
+          iconURL: panel.greetingEmbed.author.icon_url || undefined
+        });
+      }
+
+      // Footer
+      if (panel.greetingEmbed.footer && (panel.greetingEmbed.footer.text || panel.greetingEmbed.footer.icon_url)) {
+        greetingEmbed.setFooter({
+          text: panel.greetingEmbed.footer.text || "",
+          iconURL: panel.greetingEmbed.footer.icon_url || undefined
+        });
+      }
+
+      // Timestamp
+      if (panel.greetingEmbed.footer && panel.greetingEmbed.footer.timestamp) {
+        greetingEmbed.setTimestamp(new Date());
+      }
+
+      // Images
+      if (panel.greetingEmbed.thumbnail) greetingEmbed.setThumbnail(panel.greetingEmbed.thumbnail);
+      if (panel.greetingEmbed.image) greetingEmbed.setImage(panel.greetingEmbed.image);
+
+    } else {
+      // fallback
+      greetingEmbed = new EmbedBuilder()
         .setTitle('Ticket Opened')
-        .setDescription(`**${panel.greeting}**\n\n**Issue:**\n${issue}`)
-        .setColor(panel.embed?.color || 0x5103aa)
-    ],
-    components: [row]
-  });
+        .setDescription(panel.greeting || 'Thank you for opening a ticket! A moderator will be with you shortly.');
+    }
 
-  return interaction.reply({
-    content: `Your ticket has been created: <#${ticketChannel.id}>`,
-    ephemeral: true
-  });
+    // Add issue to embed
+    greetingEmbed.addFields({
+      name: 'Issue',
+      value: issue || 'No description provided'
+    });
+
+    // Buttons
+    const claimBtn = new ButtonBuilder().setCustomId('ticket_claim').setLabel('Claim').setStyle(ButtonStyle.Secondary);
+    const closeBtn = new ButtonBuilder().setCustomId('ticket_close').setLabel('Close').setStyle(ButtonStyle.Secondary);
+    const deleteBtn = new ButtonBuilder().setCustomId('ticket_delete').setLabel('Delete').setStyle(ButtonStyle.Secondary);
+    const row = new ActionRowBuilder().addComponents(claimBtn, closeBtn, deleteBtn);
+
+    // SEND the message in the ticket channel
+    await ticketChannel.send({
+      content: `<@${interaction.user.id}>`,
+      embeds: [greetingEmbed],
+      components: [row]
+    });
+
+    // REPLY to the modal submission (DO THIS ONLY ONCE)
+    await interaction.reply({
+      content: `Your ticket has been created: <#${ticketChannel.id}>`,
+      ephemeral: true
+    });
+  } catch (err) {
+    console.error("Ticket Modal Submit Error:", err);
+    if (!interaction.replied && !interaction.deferred) {
+      try {
+        await interaction.reply({
+          content: 'Something went wrong while creating your ticket.',
+          ephemeral: true
+        });
+      } catch (e) {}
+    }
+  }
 }
 
 // --- CLAIM BUTTON ---

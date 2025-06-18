@@ -1,0 +1,36 @@
+const mongoose = require('mongoose');
+
+const TicketPanelSchema = new mongoose.Schema({
+  guildId: { type: String, required: true, index: true },
+  panelName: { type: String, required: true },
+  creatorId: { type: String, required: true },
+
+  emoji: { type: String, default: '' }, // Can be Unicode or custom format
+  greeting: { type: String, default: 'Thank you for opening a ticket! A moderator will be with you shortly.' },
+
+  postChannelId: { type: String, default: '' },       // Channel where the panel is posted
+  ticketCategoryId: { type: String, default: '' },     // Channel category where tickets are created
+
+  transcriptsEnabled: { type: Boolean, default: true },
+
+  embed: {
+    title: { type: String, default: '' },
+    description: { type: String, default: '' },
+    color: { type: String, default: '#5103aa' },
+    author: {
+      name: { type: String, default: '' },
+      icon_url: { type: String, default: '' }
+    },
+    footer: {
+      text: { type: String, default: '' },
+      icon_url: { type: String, default: '' },
+      timestamp: { type: Boolean, default: false }
+    },
+    thumbnail: { type: String, default: '' },
+    image: { type: String, default: '' }
+  }
+}, { timestamps: true });
+
+TicketPanelSchema.index({ guildId: 1, panelName: 1 }, { unique: true });
+
+module.exports = mongoose.model('TicketPanel', TicketPanelSchema);
